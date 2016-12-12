@@ -60,6 +60,10 @@ public class Skill {
         return level;
     }
 
+    public double getEffectiveLevel(Outfit outfit) {
+        return level + (outfit.getSkillSubGroup() == skillSubGroup ? 10 : 0);
+    }
+
     public void increaseLevel(double amount) {
         int cap = skillSubGroup.getMinLevel() < 25 ? 50 : 100;
         level = Math.min(level + amount, cap);

@@ -101,6 +101,8 @@ public class Main {
 
         MoodValues moodValues = new MoodValues(-2, -4, 0, 0);
 
+        Outfit outfit = Outfit.BOARDING_UNIFORM;
+
         for (int i = 0; i < 3; i++) {
 
             Mood mood = moodValues.getMood();

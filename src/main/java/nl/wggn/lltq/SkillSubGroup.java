@@ -50,10 +50,17 @@ public class SkillSubGroup {
                 .sum();
     }
 
+    public double getEffectiveLevel(Outfit outfit) {
+        return Skill.getSkills(this)
+                .stream()
+                .mapToDouble(s -> s.getEffectiveLevel(outfit))
+                .sum();
+    }
+
     public double getBonus(Mood mood) {
         return mood.getBonus(this)
                 + getLevel() / 100d
-                + skillGroup.getBonus();//TODO outfit
+                + skillGroup.getBonus();
     }
 
     public double getMinLevel() {
