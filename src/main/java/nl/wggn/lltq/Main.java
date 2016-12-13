@@ -1,9 +1,20 @@
 package nl.wggn.lltq;
 
+import javax.el.ELProcessor;
 import java.util.Locale;
+import java.util.stream.Stream;
 
-import static nl.wggn.lltq.Skill.*;
-import static nl.wggn.lltq.Activity.*;
+import static nl.wggn.lltq.Activity.ATTEND_COURT;
+import static nl.wggn.lltq.Activity.ATTEND_SERVICE;
+import static nl.wggn.lltq.Activity.PLAY_WITH_TOYS;
+import static nl.wggn.lltq.Activity.VISIT_DUNGEONS;
+import static nl.wggn.lltq.Activity.VISIT_JULIANNA;
+import static nl.wggn.lltq.Skill.BATTLEFIELD;
+import static nl.wggn.lltq.Skill.COMPOSURE;
+import static nl.wggn.lltq.Skill.ELEGANCE;
+import static nl.wggn.lltq.Skill.PRESENCE;
+import static nl.wggn.lltq.Skill.PUBLIC_SPEAKING;
+import static nl.wggn.lltq.Skill.TRADE;
 
 /**
  * Created by Michiel on 12-12-2016.
@@ -12,11 +23,11 @@ public class Main {
 
     private static Skill[] classes = {
             TRADE, TRADE,//1
-            ELEGANCE, COMPOSURE,//2
-            ELEGANCE, COMPOSURE,//3
-            ELEGANCE, COMPOSURE,//4
-            ELEGANCE, COMPOSURE,//5
-            ELEGANCE, COMPOSURE,//6
+            PUBLIC_SPEAKING, BATTLEFIELD,//2
+            ELEGANCE, ELEGANCE,//3
+            PRESENCE, PRESENCE,//4
+            COMPOSURE, COMPOSURE,//5
+            PRESENCE, PRESENCE,//6
             ELEGANCE, COMPOSURE,//7
             ELEGANCE, COMPOSURE,//8
             ELEGANCE, COMPOSURE,//9
@@ -54,11 +65,11 @@ public class Main {
     };
     private static Activity[] activities = {
             PLAY_WITH_TOYS,//1
-            EXPLORE_CASTLE,//2
-            ATTEND_COURT,//3
-            ATTEND_COURT,//4
-            ATTEND_COURT,//5
-            ATTEND_COURT,//6
+            PLAY_WITH_TOYS,//2
+            PLAY_WITH_TOYS,//3
+            VISIT_DUNGEONS,//4
+            ATTEND_SERVICE,//5
+            VISIT_JULIANNA,//6
             ATTEND_COURT,//7
             ATTEND_COURT,//8
             ATTEND_COURT,//9
@@ -97,13 +108,21 @@ public class Main {
 
     public static void main(String[] args) {
 
+        SkillGroup.init();
+        SkillSubGroup.init();
+
         Locale.setDefault(Locale.ENGLISH);
+        ELProcessor elp = new ELProcessor();
 
         MoodValues moodValues = new MoodValues(-2, -4, 0, 0);
-
         Outfit outfit = Outfit.BOARDING_UNIFORM;
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 6; i++) {
+
+            Stream.of(Skill.values()).forEach(s -> elp.defineBean(s.toString().replaceAll("\\s",""), s.getEffectiveLevel(outfit)));
+
+            System.out.println("trade: "+elp.eval("Trade >= 20"));
+            System.out.println("cm: "+elp.eval("CourtManners"));
 
             Mood mood = moodValues.getMood();
             System.out.println("Mood: " + mood + " ("+prependPlus(moodValues.getAfraidAngry())+","+prependPlus(moodValues.getDepressedCheerful())+","+prependPlus(moodValues.getYieldingWillful())+","+prependPlus(moodValues.getLonelyPressured())+")");
@@ -120,10 +139,12 @@ public class Main {
             for (Event event : Event.getEvents(i)) {
                 System.out.print("Event: " + event + ". ");
                 event.applyEffects(moodValues);
+                System.out.println();
             }
 
             System.out.print("Activity: " + activities[i] + ". ");
             activities[i].applyEffects(moodValues);
+            System.out.println();
 
             System.out.println();
         }

@@ -1,203 +1,199 @@
 package nl.wggn.lltq;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static nl.wggn.lltq.Mood.AFRAID;
-import static nl.wggn.lltq.Mood.CHEERFUL;
-import static nl.wggn.lltq.Mood.YIELDING;
+import static nl.wggn.lltq.Mood.*;
 
 /**
  * Created by Michiel on 12-12-2016.
  */
 public class MoodValues {
 
-    private  static final int CAP = 4;
+    private static final int CAP = 4;
 
-    private int afraidAngry;
-    private int depressedCheerful;
-    private int yieldingWillful;
-    private int lonelyPressured;
+    private static final Map<Mood, MoodValue> lowerMoods = new HashMap<>();
+    private static final Map<Mood, MoodValue> upperMoods = new HashMap<>();
+
+    private final MoodValue afraidAngry;
+    private final MoodValue depressedCheerful;
+    private final MoodValue yieldingWillful;
+    private final MoodValue lonelyPressured;
+
+    static class MoodValue {
+        private Mood lower;
+        private Mood upper;
+        private int value;
+
+        public MoodValue(Mood lower, Mood upper) {
+            this.lower = lower;
+            this.upper = upper;
+            lowerMoods.put(lower, this);
+            upperMoods.put(upper, this);
+        }
+
+        public int getValue() {
+            return value;
+        }
+
+        public void setValue(int value) {
+            this.value = value;
+        }
+
+        public Mood getLower() {
+            return lower;
+        }
+
+        public Mood getUpper() {
+            return upper;
+        }
+
+        public void increase(int amount) {
+            value = Math.max(-CAP, Math.min(CAP, value + amount));
+        }
+
+        public void decrease(int amount) {
+            if (amount > 0) {
+                value = Math.min(Math.max(0, value), value + amount);
+            } else {
+                value = Math.max(Math.min(0, value), value + amount);
+            }
+        }
+    }
+
+    private List<MoodValue> moodValues = new ArrayList<>();
 
     public MoodValues(int afraidAngry, int depressedCheerful, int yieldingWillful, int lonelyPressured) {
-        this.afraidAngry = afraidAngry;
-        this.depressedCheerful = depressedCheerful;
-        this.yieldingWillful = yieldingWillful;
-        this.lonelyPressured = lonelyPressured;
+        this.afraidAngry = new MoodValue(AFRAID, ANGRY);
+        this.depressedCheerful = new MoodValue(DEPRESSED, CHEERFUL);
+        this.yieldingWillful = new MoodValue(YIELDING, WILLFUL);
+        this.lonelyPressured = new MoodValue(LONELY, PRESSURED);
+
+        moodValues.add(this.afraidAngry);
+        moodValues.add(this.depressedCheerful);
+        moodValues.add(this.yieldingWillful);
+        moodValues.add(this.lonelyPressured);
+
+        this.afraidAngry.setValue(afraidAngry);
+        this.depressedCheerful.setValue(depressedCheerful);
+        this.yieldingWillful.setValue(yieldingWillful);
+        this.lonelyPressured.setValue(lonelyPressured);
     }
 
     public Mood getMood() {
 
         //TODO injured
 
-        Mood mood = Mood.NEUTRAL;
+        if (!moodValues.stream().mapToInt(MoodValue::getValue).allMatch(i -> i == 0)) {
 
-        if (!(afraidAngry == 0 && depressedCheerful == 0 && yieldingWillful == 0 && lonelyPressured == 0)) {
-
-            int absAfraidAngry = Math.abs(afraidAngry);
-            int absDepressedCheerful = Math.abs(depressedCheerful);
-            int absYieldingWillful = Math.abs(yieldingWillful);
-            int absLonelyPressured = Math.abs(lonelyPressured);
-
-            if (absAfraidAngry >= absDepressedCheerful
-                    && absAfraidAngry >= absYieldingWillful
-                    && absAfraidAngry >= absLonelyPressured) {
-                if (afraidAngry > 0) {
-                    mood = Mood.ANGRY;
-                } else {
-                    mood = Mood.AFRAID;
+            for (int i = 0; i < moodValues.size() - 1; i++) {
+                MoodValue moodValue = moodValues.get(i);
+                int abs = Math.abs(moodValue.getValue());
+                if (moodValues.subList(i + 1, moodValues.size()).stream()
+                        .mapToInt(MoodValue::getValue)
+                        .map(Math::abs)
+                        .allMatch(j -> abs >= j)) {
+                    if (moodValue.getValue() > 0) {
+                        return moodValue.getUpper();
+                    } else {
+                        return moodValue.getLower();
+                    }
                 }
-            } else if (absDepressedCheerful >= absYieldingWillful
-                    && absDepressedCheerful >= absLonelyPressured) {
-                if (depressedCheerful > 0) {
-                    mood = Mood.CHEERFUL;
-                } else {
-                    mood = Mood.DEPRESSED;
-                }
-            } else if (absYieldingWillful >= absLonelyPressured) {
-                if (yieldingWillful > 0) {
-                    mood = Mood.WILLFUL;
-                } else {
-                    mood = Mood.YIELDING;
-                }
+            }
+            MoodValue moodValue = moodValues.get(moodValues.size() - 1);
+            if (moodValue.getValue() > 0) {
+                return moodValue.getUpper();
             } else {
-                if (lonelyPressured > 0) {
-                    mood = Mood.PRESSURED;
-                } else {
-                    mood = Mood.LONELY;
-                }
+                return moodValue.getLower();
             }
         }
 
-        return mood;
+        return NEUTRAL;
     }
 
     public void applyEffects(Map<Mood, Integer> moodMap) {
-        boolean first = true;
+        String output = "";
         for (Map.Entry<Mood, Integer> entry : moodMap.entrySet()) {
-            if (first) {
-                first = false;
+            Integer effect = entry.getValue();
+            String result;
+            if (effect > 0) {
+                result = increase(entry.getKey(), effect);
             } else {
-                System.out.print(", ");
+                result = decrease(entry.getKey(), -effect);
             }
-            if (entry.getKey() == AFRAID) {
-                Integer effect = entry.getValue();
-                if (effect > 0) {
-                    incAfraid(effect);
-                } else {
-                    decAfraid(effect);
+            if (result.length() > 0) {
+                if (output.length() > 0) {
+                    output += ", ";
                 }
-            }
-            if (entry.getKey() == CHEERFUL) {
-                Integer effect = entry.getValue();
-                if (effect > 0) {
-                    incCheerful(effect);
-                } else {
-                    decCheerful(effect);
-                }
-            }
-            if (entry.getKey() == YIELDING) {
-                Integer effect = entry.getValue();
-                if (effect > 0) {
-                    incYielding(effect);
-                } else {
-                    decYielding(effect);
-                }
+                output += result;
             }
         }
-        if (!first) {
-            System.out.println(".");
+        if (output.length() > 0) {
+            System.out.print(output + ".");
+        } else {
+            System.out.print("No change.");
         }
     }
 
-    public void incAfraid(int i) {
-        int oldAfraidAngry = afraidAngry;
-        afraidAngry = Math.max(-CAP, afraidAngry - i);
-        if (oldAfraidAngry > afraidAngry) {
-            System.out.print("+" + (oldAfraidAngry - afraidAngry) + " Afraid");
+    public String increase(Mood mood, int amount) {
+        MoodValue moodValue = upperMoods.get(mood);
+        int old;
+        if (moodValue == null) {
+            moodValue = lowerMoods.get(mood);
+            old = moodValue.getValue();
+
+            moodValue.increase(-amount);
+        } else {
+            old = moodValue.getValue();
+            moodValue.increase(amount);
+        }
+        int abs = Math.abs(old - moodValue.getValue());
+        if (abs > 0) {
+            return "+" + abs + " " + mood;
+        } else {
+            return "";
         }
     }
 
-    public void decAfraid(int i) {
-        afraidAngry = Math.min(Math.max(0, afraidAngry), afraidAngry + i);
-    }
+    public String decrease(Mood mood, int amount) {
+        MoodValue moodValue = upperMoods.get(mood);
+        int diff;
+        if (moodValue == null) {
+            moodValue = lowerMoods.get(mood);
+            diff = moodValue.getValue();
 
-    public void incAngry(int i) {
-        afraidAngry = Math.min(CAP, afraidAngry + i);
-    }
+            moodValue.decrease(amount);
 
-    public void decAngry(int i) {
-        afraidAngry = Math.max(Math.min(0, afraidAngry), afraidAngry - i);
-    }
+            diff = diff - moodValue.getValue();
+        } else {
+            diff = moodValue.getValue();
+            moodValue.decrease(-amount);
 
-    public void incDepressed(int i) {
-        depressedCheerful = Math.max(-CAP, depressedCheerful - i);
-    }
-
-    public void decDepressed(int i) {
-        depressedCheerful = Math.min(Math.max(0, depressedCheerful), depressedCheerful + i);
-    }
-
-    public void incCheerful(int i) {
-        int oldDepressedCheerful = depressedCheerful;
-        depressedCheerful = Math.min(CAP, depressedCheerful + i);
-        if (oldDepressedCheerful < depressedCheerful) {
-            System.out.print("+" + (depressedCheerful - oldDepressedCheerful) + " Cheerful");
+            diff -= moodValue.getValue();
         }
-    }
 
-    public void decCheerful(int i) {
-        depressedCheerful = Math.max(Math.min(0, depressedCheerful), depressedCheerful - i);
-    }
-
-    public void incYielding(int i) {
-        int oldYieldingWillful = yieldingWillful;
-        yieldingWillful = Math.max(-CAP, yieldingWillful - i);
-        if (oldYieldingWillful > yieldingWillful) {
-            System.out.print("+" + (oldYieldingWillful - yieldingWillful) + " Yielding");
+        if (diff > 0) {
+            return "-" + diff + " " + mood;
+        } else {
+            return "";
         }
-    }
-
-    public void decYielding(int i) {
-        yieldingWillful = Math.min(Math.max(0, yieldingWillful), yieldingWillful + i);
-    }
-
-    public void incWillful(int i) {
-        yieldingWillful = Math.min(CAP, yieldingWillful + i);
-    }
-
-    public void decWillful(int i) {
-        yieldingWillful = Math.max(Math.min(0, yieldingWillful), yieldingWillful - i);
-    }
-
-    public void incLonely(int i) {
-        lonelyPressured = Math.max(-CAP, lonelyPressured - i);
-    }
-
-    public void decLonely(int i) {
-        lonelyPressured = Math.min(Math.max(0, lonelyPressured), lonelyPressured + i);
-    }
-
-    public void incPressured(int i) {
-        lonelyPressured = Math.min(CAP, lonelyPressured + i);
-    }
-
-    public void decPressured(int i) {
-        lonelyPressured = Math.max(Math.min(0, lonelyPressured), lonelyPressured - i);
     }
 
     public int getAfraidAngry() {
-        return afraidAngry;
+        return afraidAngry.getValue();
     }
 
     public int getDepressedCheerful() {
-        return depressedCheerful;
+        return depressedCheerful.getValue();
     }
 
     public int getYieldingWillful() {
-        return yieldingWillful;
+        return yieldingWillful.getValue();
     }
 
     public int getLonelyPressured() {
-        return lonelyPressured;
+        return lonelyPressured.getValue();
     }
 }

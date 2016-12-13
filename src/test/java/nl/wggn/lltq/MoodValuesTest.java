@@ -14,40 +14,39 @@ public class MoodValuesTest {
 
     @Test
     public void afraid() throws Exception {
-        moodValues = new MoodValues();
-        moodValues.incAfraid(1);
+        moodValues = new MoodValues(0, 0, 0, 0);
+        moodValues.increase(Mood.AFRAID, 1);
         assertThat(moodValues.getMood(), is(Mood.AFRAID));
-        moodValues.decAfraid(2);
+        moodValues.decrease(Mood.AFRAID, 2);
         assertThat(moodValues.getMood(), is(Mood.NEUTRAL));
 
-        moodValues.incAfraid(-1);
+        moodValues.increase(Mood.AFRAID, -1);
         assertThat(moodValues.getMood(), is(Mood.ANGRY));
-        moodValues.decAfraid(1);
+        moodValues.decrease(Mood.AFRAID, 1);
         assertThat(moodValues.getMood(), is(Mood.ANGRY));
 
-        moodValues.incAfraid(10);
+        moodValues.increase(Mood.AFRAID, 10);
         assertThat(moodValues.getMood(), is(Mood.AFRAID));
-        moodValues.decAfraid(4);
+        moodValues.decrease(Mood.AFRAID, 4);
         assertThat(moodValues.getMood(), is(Mood.NEUTRAL));
     }
 
     @Test
     public void lonely() throws Exception {
-        moodValues = new MoodValues();
-        moodValues.incLonely(1);
+        moodValues = new MoodValues(0, 0, 0, 0);
+        moodValues.increase(Mood.LONELY, 1);
         assertThat(moodValues.getMood(), is(Mood.LONELY));
-        moodValues.decLonely(2);
+        moodValues.decrease(Mood.LONELY, 2);
         assertThat(moodValues.getMood(), is(Mood.NEUTRAL));
 
-        moodValues.incLonely(-1);
+        moodValues.increase(Mood.LONELY, -1);
         assertThat(moodValues.getMood(), is(Mood.PRESSURED));
-        moodValues.decLonely(1);
+        moodValues.decrease(Mood.LONELY, 1);
         assertThat(moodValues.getMood(), is(Mood.PRESSURED));
 
-        moodValues.incLonely(10);
+        moodValues.increase(Mood.LONELY, 10);
         assertThat(moodValues.getMood(), is(Mood.LONELY));
-        moodValues.decLonely(4);
+        moodValues.decrease(Mood.LONELY, 4);
         assertThat(moodValues.getMood(), is(Mood.NEUTRAL));
     }
-
 }

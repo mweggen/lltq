@@ -1,59 +1,76 @@
 package nl.wggn.lltq;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import static nl.wggn.lltq.SkillSubGroup.*;
-import static nl.wggn.lltq.SkillSubGroup.AGILITY;
-
 /**
  * Created by Michiel on 12-12-2016.
  */
-public class Skill {
+public enum Skill {
 
-    private static final Map<SkillSubGroup, Set<Skill>> skillMap = new HashMap<>();
+    COMPOSURE("Composure"),
+    ELEGANCE("Elegance"),
+    PRESENCE("Presence"),
 
-    public static final Skill COMPOSURE = new Skill(ROYAL_DEMEANOR, "COMPOSURE");
-    public static final Skill ELEGANCE = new Skill(ROYAL_DEMEANOR, "ELEGANCE");
-    public static final Skill PRESENCE = new Skill(ROYAL_DEMEANOR, "PRESENCE");
+    PUBLIC_SPEAKING("Public Speaking"),
+    COURT_MANNERS("Court Manners"),
+    FLATTERY("Flattery"),
 
-    public static final Skill PUBLIC_SPEAKING = new Skill(CONVERSATION, "PUBLIC_SPEAKING");
-    public static final Skill COURT_MANNERS = new Skill(CONVERSATION, "COURT_MANNERS");
-    public static final Skill FLATTERY = new Skill(CONVERSATION, "FLATTERY");
+    DECORATION("Decoration"),
+    INSTRUMENT("Instrument"),
+    VOICE("Voice"),
 
-    public static final Skill DECORATION = new Skill(EXPRESSION, "DECORATION");
-    public static final Skill INSTRUMENT = new Skill(EXPRESSION, "INSTRUMENT");
-    public static final Skill VOICE = new Skill(EXPRESSION, "VOICE");
+    DANCE("Dance"),
+    REFLEXES("Reflexes"),
+    FLEXIBILITY("Flexibility"),
 
-    public static final Skill DANCE = new Skill(AGILITY, "DANCE");
-    public static final Skill REFLEXES = new Skill(AGILITY, "REFLEXES");
-    public static final Skill FLEXIBILITY = new Skill(AGILITY, "FLEXIBILITY");
+    SWORDS("Swords"),
+    ARCHERY("Archery"),
+    POLEARMS("Polearms"),
 
-    //TODO
-    public static final Skill SWORDS = new Skill(WEAPONS, "SWORDS");
-    public static final Skill RUNNING = new Skill(ATHLETICS, "RUNNING");
-    public static final Skill HORSES = new Skill(ANIMAL_HANDLING, "HORSES");
-    public static final Skill NOVAN = new Skill(HISTORY, "NOVAN");
-    public static final Skill INTERNAL_AFFAIRS = new Skill(INTRIGUE, "Internal Affairs");
-    public static final Skill HERBS = new Skill(MEDICINE, "Herbs");
+    RUNNING("Running"),
+    CLIMBING("Climbing"),
+    SWIMMING("Swimming"),
 
-    public static final Skill ACCOUNTING = new Skill(ECONOMICS, "Accounting");
-    public static final Skill TRADE = new Skill(ECONOMICS, "Trade");
+    HORSES("Horses"),
+    DOGS("Dogs"),
+    FALCONS("Falcons"),
 
-    public static final Skill STRATEGY = new Skill(MILITARY, "Strategy");
-    public static final Skill MEDITATION = new Skill(FAITH, "Meditation");
-    public static final Skill SENSE_MAGIC = new Skill(LUMEN, "Sense Magic");
+    NOVAN("Novan"),
+    FOREIGN_AFFAIRS("Foreign Affairs"),
+    WORLD("World"),
+
+    INTERNAL_AFFAIRS("Internal Affairs"),
+    FOREIGN_INTELLIGENCE("Foreign Intelligence"),
+    CIPHERING("Ciphering"),
+
+    HERBS("Herbs"),
+    BATTLEFIELD("Battlefield"),
+    POISON("Poison"),
+
+    ACCOUNTING("Accounting"),
+    TRADE("Trade"),
+    PRODUCTION("Production"),
+
+    STRATEGY("Strategy"),
+    NAVAL_STRATEGY("Naval Strategy"),
+    LOGISTICS("Logistics"),
+
+    MEDITATION("Meditation"),
+    DIVINATION("Divination"),
+    LORE("Lore"),
+
+    SENSE_MAGIC("Sense Magic"),
+    RESIST_MAGIC("Resist Magic"),
+    WIELD_MAGIC("Wield Magic");
 
     private double level = 0;
-    private final SkillSubGroup skillSubGroup;
+    private SkillSubGroup skillSubGroup;
     private final String name;
 
-    private Skill(SkillSubGroup skillSubGroup, String name) {
-        this.skillSubGroup = skillSubGroup;
+    Skill(String name) {
         this.name = name;
-        skillMap.computeIfAbsent(skillSubGroup, k -> new HashSet<>()).add(this);
+    }
+
+    public void setSkillSubGroup(SkillSubGroup skillSubGroup) {
+        this.skillSubGroup = skillSubGroup;
     }
 
     public double getLevel() {
@@ -80,9 +97,5 @@ public class Skill {
     @Override
     public String toString() {
         return name;
-    }
-
-    public static Set<Skill> getSkills(SkillSubGroup skillSubGroup) {
-        return skillMap.get(skillSubGroup);
     }
 }

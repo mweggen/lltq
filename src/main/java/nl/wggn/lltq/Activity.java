@@ -26,6 +26,38 @@ public class Activity {
             .addMoodEffect(LONELY, +1)
             .addMoodEffect(CHEERFUL, +1)
             .build();
+    public static final Activity ATTEND_SERVICE = new Activity
+            .Builder("Attend Service")
+            .addMoodEffect(AFRAID, -1)
+            .build();
+    public static final Activity SNEAK_OUT = new Activity
+            .Builder("Sneak Out")
+            .addMoodEffect(WILLFUL, +2)
+            .addMoodEffect(LONELY, +1)
+            .build();
+    public static final Activity VISIT_TREASURY = new Activity
+            .Builder("Visit Treasury")
+            .build();
+    public static final Activity VISIT_TOMB = new Activity
+            .Builder("Visit Tomb")
+            .addMoodEffect(AFRAID, +1)
+            .addMoodEffect(DEPRESSED, +1)
+            .build();
+    public static final Activity WALK_IN_THE_GARDENS = new Activity
+            .Builder("Walk In The Gardens")
+            .addMoodEffect(CHEERFUL, +1)
+            .addMoodEffect(LONELY, +1)
+            .build();
+    public static final Activity VISIT_DUNGEONS = new Activity
+            .Builder("Visit Dungeons")
+            .build();
+
+    public static final Activity VISIT_JULIANNA = new Activity
+            .Builder("Visit Julianna")
+            .build();
+    public static final Activity TALK_TO_FATHER = new Activity
+            .Builder("Talk To Father")
+            .build();
 
     private final String name;
     private final Map<Mood, Integer> moodMap;
