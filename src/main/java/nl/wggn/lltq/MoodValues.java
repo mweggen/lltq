@@ -133,7 +133,7 @@ public class MoodValues {
         if (output.length() > 0) {
             System.out.print(output + ".");
         } else {
-            System.out.print("No change.");
+//            System.out.print("No change.");
         }
     }
 

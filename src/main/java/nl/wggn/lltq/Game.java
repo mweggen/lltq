@@ -1,25 +1,15 @@
 package nl.wggn.lltq;
 
-import javax.el.ELProcessor;
-import java.util.Locale;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static nl.wggn.lltq.Activity.ATTEND_COURT;
-import static nl.wggn.lltq.Activity.ATTEND_SERVICE;
-import static nl.wggn.lltq.Activity.PLAY_WITH_TOYS;
-import static nl.wggn.lltq.Activity.VISIT_DUNGEONS;
-import static nl.wggn.lltq.Activity.VISIT_JULIANNA;
-import static nl.wggn.lltq.Skill.BATTLEFIELD;
-import static nl.wggn.lltq.Skill.COMPOSURE;
-import static nl.wggn.lltq.Skill.ELEGANCE;
-import static nl.wggn.lltq.Skill.PRESENCE;
-import static nl.wggn.lltq.Skill.PUBLIC_SPEAKING;
-import static nl.wggn.lltq.Skill.TRADE;
+import static nl.wggn.lltq.Activity.*;
+import static nl.wggn.lltq.Skill.*;
 
 /**
  * Created by Michiel on 12-12-2016.
  */
-public class Main {
+public class Game {
 
     private static Skill[] classes = {
             TRADE, TRADE,//1
@@ -106,23 +96,39 @@ public class Main {
             ATTEND_COURT //40
     };
 
-    public static void main(String[] args) {
+    private static final String[] answers = {"Arrest Her"};
 
-        SkillGroup.init();
-        SkillSubGroup.init();
+    private Outfit outfit;
+    private MoodValues moodValues;
+    private Set<String> flags = new HashSet<>();
 
+    public void addFlag(String flag) {
+        flags.add(flag);
+    }
+
+    public boolean hasFlag(String flag) {
+        return flags.contains(flag);
+    }
+
+    public Game() {
         Locale.setDefault(Locale.ENGLISH);
-        ELProcessor elp = new ELProcessor();
+//        ELProcessor elp = new ELProcessor();
 
-        MoodValues moodValues = new MoodValues(-2, -4, 0, 0);
-        Outfit outfit = Outfit.BOARDING_UNIFORM;
+        moodValues = new MoodValues(-2, -4, 0, 0);
+        outfit = Outfit.BOARDING_UNIFORM;
+    }
 
+    public Outfit getOutfit() {
+        return outfit;
+    }
+
+    private void run() {
         for (int i = 0; i < 6; i++) {
 
-            Stream.of(Skill.values()).forEach(s -> elp.defineBean(s.toString().replaceAll("\\s",""), s.getEffectiveLevel(outfit)));
+//            Stream.of(Skill.values()).forEach(s -> elp.defineBean(s.toString().replaceAll("\\s",""), s.getEffectiveLevel(outfit)));
 
-            System.out.println("trade: "+elp.eval("Trade >= 20"));
-            System.out.println("cm: "+elp.eval("CourtManners"));
+//            System.out.println("trade: "+elp.eval("Trade >= 20"));
+//            System.out.println("cm: "+elp.eval("CourtManners"));
 
             Mood mood = moodValues.getMood();
             System.out.println("Mood: " + mood + " ("+prependPlus(moodValues.getAfraidAngry())+","+prependPlus(moodValues.getDepressedCheerful())+","+prependPlus(moodValues.getYieldingWillful())+","+prependPlus(moodValues.getLonelyPressured())+")");
@@ -137,9 +143,7 @@ public class Main {
             attendClass(class2, bonus2, mood);
 
             for (Event event : Event.getEvents(i)) {
-                System.out.print("Event: " + event + ". ");
-                event.applyEffects(moodValues);
-                System.out.println();
+                processEvent(event);
             }
 
             System.out.print("Activity: " + activities[i] + ". ");
@@ -148,6 +152,46 @@ public class Main {
 
             System.out.println();
         }
+    }
+
+    public static void main(String[] args) {
+
+        SkillGroup.init();
+        SkillSubGroup.init();
+
+        Game game = new Game();
+
+        game.run();
+    }
+
+    private void processEvent(Event event) {
+        System.out.print("Event: " + event + ". ");
+        event.applyEffects(moodValues);
+
+        System.out.println();
+
+        if (!event.getChoices().isEmpty()) {
+            List<Event> choices = event.getChoices().entrySet()
+                    .stream()
+                    .filter(e -> e.getValue().test(this))
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+
+            Event nextEvent = null;
+            for (Event choice : choices) {
+                if (Arrays.asList(answers).contains(choice.toString())) {
+                    nextEvent = choice;
+                    break;
+                }
+            }
+            if (nextEvent == null) {
+                nextEvent = choices.get(0);
+            }
+
+            processEvent(nextEvent);
+        }
+
+        event.getEvents().entrySet().stream().filter(e -> e.getValue().test(this)).map(Map.Entry::getKey).forEach(this::processEvent);
     }
 
     private static void attendClass(Skill skill, double bonus, Mood mood) {

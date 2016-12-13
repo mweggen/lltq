@@ -1,45 +1,88 @@
 package nl.wggn.lltq;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
+
+import static nl.wggn.lltq.Mood.*;
 
 /**
  * Created by Michiel on 12-12-2016.
  */
 public class Event {
 
-    private static final List<List<Event>> events = new ArrayList<>(40);
+    private static final List<List<Event>> eventsByWeek = new ArrayList<>(40);
 
     static {
         for (int i = 0; i < 40; i++) {
-            events.add(new ArrayList<>());
+            eventsByWeek.add(new ArrayList<>());
         }
     }
 
-    private static final Event W1_CHARLOTTE_ARRIVES = new Event.Builder("Charlotte Arrives")
+    private static final Event W1_CHARLOTTE_ARRIVES = new Builder("Charlotte Arrives")
             .week(0)
-            .addEffect(Mood.CHEERFUL, +1).build();
-    private static final Event W2_JULIANNA_ARRIVES = new Event.Builder("Julianna Arrives")
-            .week(1).build();
-    private static final Event W3_SNAKE_ATTACK = new Event.Builder("Snake Attack")
-            .week(2).build();
+            .effect(CHEERFUL, +1).build();
+    private static final Event W2_JULIANNA_ARRIVES = new Builder("Julianna Arrives")
+            .week(1)
+            .choice(new Builder("Send Her Away")
+                    .effect(ANGRY, +1)
+                    .effect(YIELDING, +1)
+                    .build(), o -> {
+                new Builder("Approached by a Priestess")
+                        .week(5)
+                        .build();
+                return true;
+            })
+            .choice(new Builder("Arrest Her")
+                    .effect(ANGRY, +1)
+                    .build(), o -> {
+                //TODO julianna in dungeon
+                return true;
+            })
+            .choice(new Builder("Let Her Stay")
+                    .effect(WILLFUL, +1)
+                    .build(), o -> true)
+            .build();
+    private static final Event W3_SNAKE_ATTACK = new Builder("Snake Attack")
+            .week(2)
+            .event(new Builder("Don't move!").build(),
+                    game -> game.hasFlag("JULIANNA_AVAILABLE"))
+            .event(new Builder("Charlotte, don't move!")
+                    .event(new Builder("Success")
+                                    .effect(ANGRY, +1)
+                                    .build(),
+                            game -> Skill.REFLEXES.getEffectiveLevel(game.getOutfit()) >= 20)
+                    .event(new Builder("Failure")
+                                    .effect(AFRAID, +1)
+                                    .build(),
+                            game -> Skill.REFLEXES.getEffectiveLevel(game.getOutfit()) < 20)
+                    .build(), game -> !game.hasFlag("JULIANNA_AVAILABLE"))
+            .build();
 
     private final String name;
     private final Map<Mood, Integer> moodEffectMap;
-    private final Predicate requirement;
+    private final Map<Event, Predicate<Game>> choices;
+    private final Map<Event, Predicate<Game>> events;
 
     private Event(Builder builder) {
         this.name = builder.name;
         this.moodEffectMap = builder.moodEffectMap;
-        this.requirement = builder.requirement;
-        events.get(builder.week).add(this);
+        this.choices = builder.choices;
+        this.events = builder.events;
+        if (builder.week != null) {
+            eventsByWeek.get(builder.week).add(this);
+        }
     }
 
     public void applyEffects(MoodValues moodValues) {
         moodValues.applyEffects(moodEffectMap);
+    }
+
+    public Map<Event, Predicate<Game>> getChoices() {
+        return choices;
+    }
+
+    public Map<Event, Predicate<Game>> getEvents() {
+        return events;
     }
 
     @Override
@@ -51,7 +94,8 @@ public class Event {
         private String name;
         private Integer week = null;
         private Map<Mood, Integer> moodEffectMap = new HashMap<>();
-        private Predicate requirement;
+        private Map<Event, Predicate<Game>> choices = new LinkedHashMap<>();
+        private Map<Event, Predicate<Game>> events = new LinkedHashMap<>();
 
         public Builder(String name) {
             this.name = name;
@@ -62,13 +106,18 @@ public class Event {
             return this;
         }
 
-        public Builder addEffect(Mood mood, int effect) {
+        public Builder effect(Mood mood, int effect) {
             moodEffectMap.put(mood, effect);
             return this;
         }
 
-        public Builder requirement(Predicate requirement) {
-            this.requirement = requirement;
+        public Builder choice(Event event, Predicate<Game> predicate) {
+            choices.put(event, predicate);
+            return this;
+        }
+
+        public Builder event(Event event, Predicate<Game> predicate) {
+            events.put(event, predicate);
             return this;
         }
 
@@ -78,6 +127,6 @@ public class Event {
     }
 
     public static List<Event> getEvents(int week) {
-        return events.get(week);
+        return eventsByWeek.get(week);
     }
 }
